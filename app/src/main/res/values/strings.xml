@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">VesselSkirmish</string>
+    <string name="Ultimate_ship">Select where you want your ships to appear!</string>
+    <string name="Big_ship">Now Select Where You Want To Place Your Big Ship</string>
+    <string name="Medium_ship">Now Select Where You Want To Place Your Medium Ship</string>
+    <string name="Little_ship">Now Select Where You Want To Place Your Little Ship</string>
+    <string name="Baby_ship">Now Select Where You Want To Place Your Baby Boat</string>
+    <string name="Instructions">Welcome to Vessel Skirmish! Place your vessels in a strategic arrangement your opponent could never guess and try to guess where they placed theirs.
+    Consecutive successful hits will grant you(as well as your opponent) special abilities. Good luck! </string>
+</resources>
