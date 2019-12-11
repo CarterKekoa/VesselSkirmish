@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "917402828234",
+    "firebase_url": "https://vesselskirmish-a5af5.firebaseio.com",
+    "project_id": "vesselskirmish-a5af5",
+    "storage_bucket": "vesselskirmish-a5af5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917402828234:android:aeddecb13dfb494938a333",
+        "android_client_info": {
+          "package_name": "com.cartermooring.vesselskirmish"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "917402828234-l8u8k85s3l82e0vleut7gcu0bng9b7t4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cartermooring.vesselskirmish",
+            "certificate_hash": "9b7d44666f53c1ec2135aa10c38eebd851699354"
+          }
+        },
+        {
+          "client_id": "917402828234-btgn3jh2hhvdbr3t9f9945o97imegme4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC3WHq9-NPkpSNZk-n-J6wmu6dvVHcNeA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "917402828234-btgn3jh2hhvdbr3t9f9945o97imegme4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
