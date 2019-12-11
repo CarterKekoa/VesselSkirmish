@@ -2,6 +2,7 @@ package com.cartermooring.vesselskirmish;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -14,11 +15,18 @@ public class ShipChoiceActivity extends AppCompatActivity {
     static final String TAG = "ShipChoiceTAG";
     int imageChange = -1;
     int userImageChoice = -1;
+    String username = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ship_choice_activity_main);
+
+        Intent intent = getIntent();
+        if (intent != null){
+            username = intent.getStringExtra("username");
+            Log.d(TAG, "onCreate: " + userImageChoice);
+        }
 
         final ImageView playerChoice = (ImageView) findViewById(R.id.playersChoice);
         final ImageButton battleship = (ImageButton) findViewById(R.id.battleship);
@@ -86,6 +94,7 @@ public class ShipChoiceActivity extends AppCompatActivity {
                 if(imageChange >= 0){
                     Intent intent = new Intent(ShipChoiceActivity.this, ShipPlacementActivity.class);
                     intent.putExtra("shipChoice", userImageChoice);
+                    intent.putExtra("username", username);
                     startActivity(intent);
                 } else{
                     Toast.makeText(ShipChoiceActivity.this, "Please select a ship type", Toast.LENGTH_SHORT).show();

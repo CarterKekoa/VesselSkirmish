@@ -10,8 +10,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -23,16 +25,22 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class WelcomeActivity extends AppCompatActivity {
     static final String TAG = "WelcomeActivityTAG";
     static final int SIGN_IN_REQUEST = 1;
 
     String username = "";
+    List<User> userList;
+    ArrayAdapter<User> arrayAdapter;
+    ListView listView;
+
     FirebaseDatabase mFireBaseDataBase;
-    DatabaseReference mNameDatabaseReference;
-    ChildEventListener mNameChildEventListener;
+    DatabaseReference mUserDatabaseReference;
+    ChildEventListener mUserChildEventListener;
     FirebaseAuth mFirebaseAuth;
     FirebaseAuth.AuthStateListener mAuthStateListener;
 
@@ -42,28 +50,51 @@ public class WelcomeActivity extends AppCompatActivity {
         setContentView(R.layout.welcome_activity_main);
         Log.d(TAG, "1");
 
+        listView = (ListView)findViewById(R.id.listView);
+        userList = new ArrayList<>();
+        userList.add(new User());
+        arrayAdapter = new ArrayAdapter<User>(
+                this, android.R.layout.simple_list_item_1, userList
+        );
+        listView.setAdapter(arrayAdapter);
+
         setupFirebase();
 
-        Button playButton = (Button) findViewById(R.id.playButton);
-        final EditText usernameEditText = (EditText) findViewById(R.id.usernameEditText);
-        Log.d(TAG, "2");
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String username = usernameEditText.getText().toString();
-                Log.d(TAG, "3");
-                Intent intent = new Intent(WelcomeActivity.this, ShipChoiceActivity.class);
-                intent.putExtra("username", username);
+    }
 
-                if (username.length() > 0){
-                    Log.d(TAG, "4");
-                    startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(WelcomeActivity.this).toBundle());
-                }else{
-                    Log.d(TAG, "5");
-                    Toast.makeText(WelcomeActivity.this, "Please Enter A Valid Username", Toast.LENGTH_LONG).show();
-                }
-        }
-    });
+    private void setupFirebase() {
+        // initialize the firebase references
+        mFireBaseDataBase = FirebaseDatabase.getInstance();
+        mUserDatabaseReference = mFireBaseDataBase.getReference().child("users");
+        mUserChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Log.d(TAG, "onChildAdded: " + s);
+                User user = dataSnapshot.getValue(User.class);
+                userList.add(user);
+                arrayAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
 
         mFirebaseAuth = FirebaseAuth.getInstance();
         mAuthStateListener = new FirebaseAuth.AuthStateListener() {
@@ -99,42 +130,6 @@ public class WelcomeActivity extends AppCompatActivity {
         };
     }
 
-    private void setupFirebase() {
-        // initialize the firebase references
-        mFireBaseDataBase =
-                FirebaseDatabase.getInstance();
-        mNameDatabaseReference =
-                mFireBaseDataBase.getReference()
-                        .child("messages");
-        mNameChildEventListener = new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        };
-
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -162,18 +157,51 @@ public class WelcomeActivity extends AppCompatActivity {
         mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
     }
 
-
-
-
-
     private void setupUserSignedIn(FirebaseUser user) {
         // get the user's name
         username = user.getDisplayName();
         // listen for database changes with childeventlistener
         // wire it up!
-        mNameDatabaseReference
-                .addChildEventListener(mNameChildEventListener);
+        mUserDatabaseReference
+                .addChildEventListener(mUserChildEventListener);
     }
 
+    public void onPlayButtonClick(View view){
+        Log.d(TAG, "onPlayButtonClick: ");
+        EditText usernameEditText = (EditText) findViewById(R.id.usernameEditText);
+        String currText = usernameEditText.getText().toString();
+
+        if (currText.isEmpty()) {
+            Toast.makeText(this, "Please enter a username first", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Intent intent = new Intent(WelcomeActivity.this, ShipChoiceActivity.class);
+            intent.putExtra("username", username);
+            startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(WelcomeActivity.this).toBundle());
+            //TODO, here is where they put new value in, we need to do this but after the game is finished instead
+        }
+
+
+
+
+
+//        playButton.setOnClickListener(new View.OnClickListener() {
+//            @Override //TODO using these
+//            public void onClick(View v) {
+//                username = usernameEditText.getText().toString();
+//                Log.d(TAG, "3");
+//                Intent intent = new Intent(WelcomeActivity.this, ShipChoiceActivity.class);
+//                intent.putExtra("username", username);
+//
+//                if (username.length() > 0){
+//                    Log.d(TAG, "4");
+//                    startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(WelcomeActivity.this).toBundle());
+//                }else{
+//                    Log.d(TAG, "5");
+//                    Toast.makeText(WelcomeActivity.this, "Please Enter A Valid Username", Toast.LENGTH_LONG).show();
+//                }
+//            }
+//        });
+    }
 
 }

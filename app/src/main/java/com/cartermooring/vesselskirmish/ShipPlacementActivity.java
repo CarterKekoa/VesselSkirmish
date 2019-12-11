@@ -19,6 +19,7 @@ public class ShipPlacementActivity extends AppCompatActivity {
     int shipChoice = -1;
     String tagArray = "";
     int tagCounter = 17;
+    String username = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +49,11 @@ public class ShipPlacementActivity extends AppCompatActivity {
                 if(shipsLeft <= 0){
                     Intent intent = new Intent(ShipPlacementActivity.this, GameActivity.class);
                     intent.putExtra("tagArray", tagArray);
+                    intent.putExtra("username", username);
 
                     if(intent != null) {
                         startActivity(intent);
                     }
-                    //TODO move to next screen and gameplay
                 }else{
                     Toast.makeText(ShipPlacementActivity.this, "You haven't placed all your ships yet!", Toast.LENGTH_LONG).show();
                 }

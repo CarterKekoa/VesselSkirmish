@@ -30,12 +30,23 @@ public class GameActivity extends ShipPlacementActivity {
     boolean whoWins = false; //default computer
     int playersShipCount = 17;
     int AIsShipCount = 17;
+    String username = "";
+    int win = 0;
+    int lose = 0;
+    int totalEnemySunkenShips = 0;
+    int totalAllySunkenShips = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ai_game_activity_main); //TODO set this for user then change as turn changes
+        setContentView(R.layout.ai_game_activity_main); //TODO set this for user then change
+            // TODO as turn changes for multi-page implementation for view of AI screen
 
+        Intent intent = getIntent();
+        if (intent != null){
+            username = intent.getStringExtra("username");
+            Log.d(TAG, "onCreate: " + userImageChoice);
+        }
 
         Button quitButton = (Button)findViewById(R.id.quitButton);
         quitButton.setOnClickListener(new View.OnClickListener() {
@@ -83,6 +94,7 @@ public class GameActivity extends ShipPlacementActivity {
             AIsShipCount -= 1;
             Log.d(TAG, "AIsShip count after hit: " + AIsShipCount);
             playerTextView.setText("You sunk a ship! AI has " + AIsShipCount + " ship(s) left!");
+            totalEnemySunkenShips += 1;
             playerView.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light));
         } else {
             button.setImageResource(R.drawable.splash);
@@ -96,6 +108,7 @@ public class GameActivity extends ShipPlacementActivity {
                     .setMessage("The AI beat you :(")
                     .setNegativeButton("Return Home", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
+                            lose += 1;
                             finish();
                         }
                     });
@@ -108,6 +121,7 @@ public class GameActivity extends ShipPlacementActivity {
         if(AITurn()){   //AI hits one of the users ships
             playersShipCount -= 1;
             AITextView.setText("One of your ships was hit! You have " + playersShipCount + " ship(s) left!");
+            totalAllySunkenShips += 1;
             AIView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
         } else{ //AI misses
             AITextView.setText("The AI Missed! Time to capitalize! It only has " + AIsShipCount + " ship(s) left!");
@@ -120,6 +134,7 @@ public class GameActivity extends ShipPlacementActivity {
                     .setMessage("You beat the AI!!")
                     .setNegativeButton("Return Home", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
+                                    win += 1;
                                     finish();
                                 }
                                 });
