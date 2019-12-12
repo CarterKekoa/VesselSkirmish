@@ -6,6 +6,14 @@
     android:saveEnabled="true"
     android:columnCount="8">
 
+    <ListView
+        android:id="@+id/gameListView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        />
+
     <TextView
         android:id="@+id/playerTitle"
         android:text="@string/playersTurn"

@@ -33,7 +33,7 @@ public class User {
     public void setLoses(int loses){this.loses = loses;}
     public int getTotalEnemySunkenShips(){return totalEnemySunkenShips;}
     public void setTotalEnemySunkenShips(int totalEnemySunkenShips){this.totalEnemySunkenShips = totalEnemySunkenShips;}
-    public int getTotalAllySunkenShips(){return getTotalAllySunkenShips();}
+    public int getTotalAllySunkenShips(){return totalAllySunkenShips;}
     public void setTotalAllySunkenShips(int totalAllySunkenShips){this.totalAllySunkenShips = totalAllySunkenShips;}
 
     @Override

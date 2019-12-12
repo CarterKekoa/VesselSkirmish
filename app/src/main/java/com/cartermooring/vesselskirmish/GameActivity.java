@@ -1,9 +1,11 @@
 package com.cartermooring.vesselskirmish;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
@@ -13,17 +15,33 @@ import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class GameActivity extends ShipPlacementActivity {
     static final String TAG = "GameActivtiyTAG";
+    static final int SIGN_IN_REQUEST = 1;
     public Cell[][] AIGrid = new Cell[8][8];
     public Cell[][] playerGrid = new Cell[8][8];
     boolean whosUp; //player goes first always
@@ -35,6 +53,16 @@ public class GameActivity extends ShipPlacementActivity {
     int lose = 0;
     int totalEnemySunkenShips = 0;
     int totalAllySunkenShips = 0;
+
+    List<User> userList;
+    ArrayAdapter<User> arrayAdapter;
+    ListView listView;
+
+    FirebaseDatabase mFireBaseDataBase;
+    DatabaseReference mUserDatabaseReference;
+    ChildEventListener mUserChildEventListener;
+    FirebaseAuth mFirebaseAuth;
+    FirebaseAuth.AuthStateListener mAuthStateListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,8 +101,18 @@ public class GameActivity extends ShipPlacementActivity {
         AIShipPlacement();          //randomly place the AI ships on board
 
 
+        listView = (ListView)findViewById(R.id.gameListView);
+        userList = new ArrayList<>();
+        userList.add(new User());
+        arrayAdapter = new ArrayAdapter<User>(
+                this, android.R.layout.simple_list_item_1, userList
+        );
+        listView.setAdapter(arrayAdapter);
+
+        setupFirebase();
 
     }
+
 
     //main game function happens when the user clicks a button
     public void mainGameActivity(ImageButton button){
@@ -108,12 +146,14 @@ public class GameActivity extends ShipPlacementActivity {
                     .setMessage("The AI beat you :(")
                     .setNegativeButton("Return Home", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            lose += 1;
                             finish();
                         }
                     });
+
             alertDialogBuilder.show();
-            //TODO update firebase
+            lose += 1;
+            User user = new User(username, win, lose, totalEnemySunkenShips, totalAllySunkenShips);
+            mUserDatabaseReference.push().setValue(user);
         }
 
         whosUp = false; //change turn to AI
@@ -124,7 +164,7 @@ public class GameActivity extends ShipPlacementActivity {
             totalAllySunkenShips += 1;
             AIView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
         } else{ //AI misses
-            AITextView.setText("The AI Missed! Time to capitalize! It only has " + AIsShipCount + " ship(s) left!");
+            AITextView.setText("The AI Missed! Time to capitalize! You have " + playersShipCount + "ship(s) left!");
             AIView.setBackgroundColor(getResources().getColor(android.R.color.white));
         }
 
@@ -134,13 +174,14 @@ public class GameActivity extends ShipPlacementActivity {
                     .setMessage("You beat the AI!!")
                     .setNegativeButton("Return Home", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
-                                    win += 1;
                                     finish();
                                 }
                                 });
-            alertDialogBuilder.show();
 
-            //TODO update firebase
+            alertDialogBuilder.show();
+            win += 1;
+            User user = new User(username, win, lose, totalEnemySunkenShips, totalAllySunkenShips);
+            mUserDatabaseReference.push().setValue(user);
         }
 
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);  //make screen touchable again
@@ -184,9 +225,16 @@ public class GameActivity extends ShipPlacementActivity {
 
     public boolean AITurn(){
         Random random = new Random();
-        int row = random.nextInt(8);
-        int col = random.nextInt(8);
-        //TODO improve upon AIs ability
+        int stop = 0;
+        int row;
+        int col;
+        do {
+            row = random.nextInt(8);
+            col = random.nextInt(8);
+            if(AIGrid[row][col].getPlayer() != 2){
+                stop += 1;
+            }
+        }while (stop != 1);
         return isHit(row, col);
     }
 
@@ -514,4 +562,108 @@ public class GameActivity extends ShipPlacementActivity {
                     break;
                     }
             }
+
+    private void setupFirebase() {
+        // initialize the firebase references
+        mFireBaseDataBase = FirebaseDatabase.getInstance();
+        mUserDatabaseReference = mFireBaseDataBase.getReference().child("users");
+        mUserChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Log.d(TAG, "onChildAdded: " + s);
+                User user = dataSnapshot.getValue(User.class);
+                userList.add(user);
+                arrayAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth mFirebaseAuth) {
+                // we have two auth states, signed in and signed out
+                // get the get current user, if there is one
+                FirebaseUser user = mFirebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // user is signed in
+                    // step 4
+                    setupUserSignedIn(user);
+                } else {
+                    // user is signed out
+                    // step 5
+                    // we need an intent
+                    // the firebaseUI Github repo README.md
+                    // we have used builders before in this class
+                    // AlertDialog.Builder
+                    // return instance to support chaining
+                    Intent intent = AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setIsSmartLockEnabled(false)
+                            .setAvailableProviders(
+                                    Arrays.asList(
+                                            new AuthUI.IdpConfig.EmailBuilder().build(),
+                                            new AuthUI.IdpConfig.GoogleBuilder().build()
+                                    )
+                            ).build();
+                    startActivityForResult(intent, SIGN_IN_REQUEST);
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SIGN_IN_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, "You are now signed in", Toast.LENGTH_SHORT).show();
+            }
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                // they backed out of the sign in activity
+                // let's exit
+                finish();
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFirebaseAuth.addAuthStateListener(mAuthStateListener);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mFirebaseAuth.removeAuthStateListener(mAuthStateListener);
+    }
+
+    private void setupUserSignedIn(FirebaseUser user) {
+        // get the user's name
+        username = user.getDisplayName();
+        // listen for database changes with childeventlistener
+        // wire it up!
+        mUserDatabaseReference
+                .addChildEventListener(mUserChildEventListener);
+    }
 }
